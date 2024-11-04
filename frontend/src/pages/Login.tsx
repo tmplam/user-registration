@@ -1,10 +1,15 @@
+import { apiLogin } from '@/apis';
 import { ApiResponse } from '@/models/apiResponse';
+import { useUserStore } from '@/store';
 import { AxiosError } from 'axios';
 import { FormEvent, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
 export function Login() {
+  const navigate = useNavigate();
+  const { setAccessToken } = useUserStore();
+
   const [email, setEmail] = useState('');
   const [emailErrorMessage, setEmailErrorMessage] = useState('');
   const [password, setPassword] = useState('');
@@ -12,32 +17,31 @@ export function Login() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const validateEmail = (value: string) => value.match(/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i);
-
-  async function handleSubmitSignUp(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmitLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     let valid = true;
 
-    if (!validateEmail(email)) {
+    if (email == '') {
       valid = false;
-      if (email == '') {
-        setEmailErrorMessage('Email is required.');
-      } else {
-        setEmailErrorMessage('Must be a valid email.');
-      }
+      setEmailErrorMessage('This field is required.');
     }
 
     if (password == '') {
       valid = false;
-      setPasswordErrorMessage('Password is required.');
+      setPasswordErrorMessage('This field is required.');
     }
 
     if (valid) {
       setIsSubmitting(true);
       try {
-        // Send http request here
+        const response = await apiLogin({ email, password });
+        setAccessToken(response.data.access_token);
+        toast(response.message, {
+          type: 'success',
+        });
+        navigate('/');
       } catch (error) {
-        const response = (error as AxiosError)!.response?.data as unknown as ApiResponse<any>;
+        const response = (error as AxiosError)!.response?.data as unknown as ApiResponse<unknown>;
         let message = response.message;
         if (typeof message !== 'string') {
           message = message[0];
@@ -59,7 +63,7 @@ export function Login() {
         <form
           noValidate
           className="grid gap-4"
-          onSubmit={handleSubmitSignUp}
+          onSubmit={handleSubmitLogin}
         >
           <div>
             <input

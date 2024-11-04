@@ -2,10 +2,12 @@ import { apiRegisterUser } from '@/apis';
 import { ApiResponse } from '@/models/apiResponse';
 import { AxiosError } from 'axios';
 import { FormEvent, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
 export function Register() {
+  const navigate = useNavigate();
+
   const [email, setEmail] = useState('');
   const [emailErrorMessage, setEmailErrorMessage] = useState('');
   const [password, setPassword] = useState('');
@@ -40,8 +42,11 @@ export function Register() {
         toast(response.message, {
           type: 'success',
         });
+        setTimeout(() => {
+          navigate('/login');
+        }, 1000);
       } catch (error) {
-        const response = (error as AxiosError)!.response?.data as unknown as ApiResponse<any>;
+        const response = (error as AxiosError)!.response?.data as unknown as ApiResponse<unknown>;
         let message = response.message;
         if (typeof message !== 'string') {
           message = message[0];

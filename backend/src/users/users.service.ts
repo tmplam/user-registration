@@ -1,20 +1,20 @@
 import { Model } from 'mongoose';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from './schemas/user.schema';
-import { CreateUserDto } from './dto/create-user.dto';
+import { CreateUserRequest } from './dtos/create-user-request.dto';
 
 @Injectable()
 export class UsersService {
   constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
-  async create(createUserDto: CreateUserDto): Promise<User> {
-    const existedUser = await this.findByEmail(createUserDto.email);
+  async create(createUserRequest: CreateUserRequest): Promise<User | null> {
+    const existedUser = await this.findByEmail(createUserRequest.email);
     if (existedUser) {
-      throw new BadRequestException('Email is already in use.');
+      return null;
     }
 
-    const createdUser = await new this.userModel(createUserDto).save();
+    const createdUser = await new this.userModel(createUserRequest).save();
     return createdUser.toObject();
   }
 

@@ -1,3 +1,4 @@
+import { getAccessToken, removeAccessToken } from '@/utils/localStorageUtils';
 import axios from 'axios';
 
 const instance = axios.create({
@@ -8,6 +9,10 @@ const instance = axios.create({
 instance.interceptors.request.use(
   function (config) {
     // Do something before request is sent
+    const token = getAccessToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
   },
   function (error) {
@@ -26,6 +31,14 @@ instance.interceptors.response.use(
   function (error) {
     // Any status codes that falls outside the range of 2xx cause this function to trigger
     // Do something with response error
+
+    if (error.response?.status === 401) {
+      console.error('Unauthorized! Token may be invalid or expired.');
+      removeAccessToken();
+      if (window.location.pathname !== '/') {
+        window.location.href = '/login';
+      }
+    }
     return Promise.reject(error);
   }
 );
